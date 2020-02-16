@@ -1,0 +1,29 @@
+{
+    "sim_loop": 500,
+    
+    "edge_cond": {
+        "_comment": "speed [m/s], accel [m/ss], curvature [1/m], max_road_width [m]",
+        "max_speed": 15.0,
+        "max_acceleration": 2.0,
+        "max_curvature": 1.0,
+        "max_road_width": 7.0,
+        "min_prediction_time": 5.0
+    },
+
+    "_comment": "road_width[m], dt[s], ",
+    "road_width": 1.0,
+    "target_speed": 8.0,
+    "target_speed_sampling_length": 1.38,
+    "target_speed_num_sampling": 1.0,
+
+    "robot_radius": 2.0,
+
+    "cost_weights": {
+        "kj": 0.1,
+        "kt": 0.1,
+        "kd": 1.0,
+        "klat": 1.0,
+        "klon": 1.0
+    }
+
+}

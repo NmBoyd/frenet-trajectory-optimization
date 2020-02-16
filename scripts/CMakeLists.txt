@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.1)
+project(FrenetTrajectoryOptimizationScripts)
+message(STATUS "COMPILING FrenetTrajectoryOptimizationScripts")
+
+add_executable(RunFrenetOptimalTrajectory RunFrenetOptimalTrajectory.cpp)
+target_link_libraries(RunFrenetOptimalTrajectory LibFrenetTrajectoryOptimization)
