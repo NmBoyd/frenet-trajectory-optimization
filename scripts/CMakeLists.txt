@@ -4,3 +4,6 @@ message(STATUS "COMPILING FrenetTrajectoryOptimizationScripts")
 
 add_executable(RunFrenetOptimalTrajectory RunFrenetOptimalTrajectory.cpp)
 target_link_libraries(RunFrenetOptimalTrajectory LibFrenetTrajectoryOptimization)
+
+add_executable(TestPolynomial TestPolynomial.cpp)
+target_link_libraries(TestPolynomial LibFrenetTrajectoryOptimization)

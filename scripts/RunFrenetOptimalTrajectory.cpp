@@ -10,6 +10,7 @@
 #include <Eigen/Dense>
 
 #include "FrenetOptimization.h"
+#include "PolynomialTraj.h"
 #include "json.hpp"
 #include "matplotlib-cpp/matplotlibcpp.h"
  
@@ -38,7 +39,8 @@ int main()
     // TODO: Generate cubic spline of route
     // TODO: Check the polynomial interpolation for quartic and quintic
     // TODO: Write the frenet optimal planner
-    
+    // TODO: Tune where needed and add lane-based FSM
+
 	for(int i=0; i<n; i++) {
 
         // Update vehicle state (current, previous, and end state)

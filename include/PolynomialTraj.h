@@ -1,41 +1,66 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 #include <Eigen/Core>
-#include <Eigen/QR>
 #include <Eigen/Dense>
 
-using namespace Eigen;
-using namespace std;
-double huber_loss(double speed, double target);
+typedef struct {
+  std::vector<double> time_list; 
+  std::vector<double> x_list;
+  std::vector<double> y_list;
+  std::vector<double> yaw_list;
+  std::vector<double> vel_list;
+  std::vector<double> accel_list;
+  std::vector<double> jerk_list;
+} Trajectory2d;
 
-VectorXd getPolynomialCoeffs(\
-  double s0, double s0_dot, double s0_ddot, \
-  double st, double st_dot, double st_ddot, \
-  double T_terminal);
+class QuinticPolynomial {
+public:
+  /**
+   * @param min_time the minimum time to the goal
+   * @param max_time the max time to the goal
+   */
+  QuinticPolynomial(double x_init, 
+    double v_init, 
+    double a_init,
+    double x_end, 
+    double v_end, 
+    double a_end, 
+    double time_end);
+  ~QuinticPolynomial();
 
-int solvePolynomialsFullTerminalCond(double s0, double s0dot, double s0ddot, \
-  double s1, double s1dot, double s1ddot, double kspeed, double ks, double max_speed, double acc_thres, vector<double> Tjset, vector<double> ds1set, \
-  MatrixXd &Trajectories, VectorXd &Costs);
 
-int solvePolynomialsTwoTerminalCond(double s0, double s0dot, double s0ddot, \
-  double s1dot, double s1ddot, double kspeed, double max_speed, double acc_thres, vector<double> Tjset, vector<double> ds1dotset, \
-  MatrixXd &Trajectories, VectorXd &Costs);
+  inline double GetPosition(double time);
+  inline double GetVelocity(double time);
+  inline double GetAcceleration(double time);
+  inline double GetJerk(double time);
 
-int VelocityKeepingTrajectories(double s0, double s0dot, double s0ddot, \
-  double s1dot, double max_speed, MatrixXd &s_trajectories, VectorXd &s_costs);
+private:
+  double a_[6] = {0,0,0,0,0,0};
+  double min_time_;
+  double max_time_;
+};
 
-int FollowingTrajectories(double s0, double s0dot, double s0ddot, \
-    double s_lv0, double s_lv0dot, double max_speed, MatrixXd &s_trajectories, VectorXd &s_costs);
-
-int lateralTrajectories(double d0, double d0dot, double d0ddot, \
-  double d1, bool in_mylane, MatrixXd &d_trajectories, VectorXd &d_costs);
-
-vector<int> optimalCombination(VectorXd s_costs, VectorXd d_costs);
-
-double getPosition(VectorXd coeffs, double t);
-
-double getVelocity(VectorXd coeffs, double t);
-
-double getAcceleration(VectorXd coeffs, double t);
+/**
+ * quintic polynomial planner
+ * 
+ * input
+ *     @param traj the trajectory being generated
+ *     @param sx start x position [m]
+ *     @param sy start y position [m]
+ *     @param syaw start yaw angle [rad]
+ *     @param sa start accel [m/ss]
+ *     @param gx goal x position [m]
+ *     @param gy goal y position [m]
+ *     @param gyaw goal yaw angle [rad]
+ *     @param ga goal accel [m/ss]
+ *     @param max_accel maximum accel [m/ss]
+ *     @param max_jerk maximum jerk [m/sss]
+ *     @param dt time tick [s]
+ *
+ */
+bool QuinticPolynomialPlanFrenet(Trajectory2d& traj, double sx, double sy, double syaw,
+  double sv, double sa, double gx, double gy, double gyaw, double gv, double ga, double max_accel,
+  double max_jerk, double dt, double min_time = 5.0, double max_time = 100.0);
