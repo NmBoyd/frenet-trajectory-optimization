@@ -136,3 +136,66 @@ bool QuinticPolynomialPlanFrenet(Trajectory2d& traj, double sx, double sy, doubl
   }
   return true;
 }
+
+// -----------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------
+// QUARTIC POLYNOMIAL
+// -----------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------
+
+QuarticPolynomial::QuarticPolynomial(double x_init, 
+  double v_init, 
+  double a_init,
+  double x_end, 
+  double v_end, 
+  double a_end, 
+  double time_end)
+{
+  a_[0] = x_init;
+  a_[1] = v_init;
+  a_[2] = a_init / 2;
+
+  double t = time_end;
+  Eigen::Matrix2d A;
+  A << 3*pow(t, 2.), 4*pow(t, 3.), 
+      6*t, 12*pow(t, 2.);
+
+  Eigen::Vector2d b;
+  b << v_end - (a_[1] + 2 * a_[2] * t),
+      a_end - 2 * a_[2];
+
+  Eigen::Vector2d x;
+  x = A.inverse() * b; // TODO: use a function to do this faster
+  a_[3] = x[0];
+  a_[4] = x[1];
+}
+
+QuarticPolynomial::~QuarticPolynomial()
+{
+}
+
+inline double QuarticPolynomial::GetPosition(double t)
+{
+  double xt = a_[0] + a_[1] * t + a_[2] * pow(t,2) + 
+        a_[3] * pow(t,3) + a_[4] * pow(t,4);
+  return xt;
+}
+
+inline double QuarticPolynomial::GetVelocity(double t)
+{
+  double vt = a_[1] + 2 * a_[2] * t + 3 * a_[3] * pow(t,2) +
+                4 * a_[4] * pow(t,3);
+  return vt;
+}
+
+inline double QuarticPolynomial::GetAcceleration(double t)
+{
+  double at = 2 * a_[2] + 6 * a_[3] * t + 12 * a_[4] * pow(t,2);
+  return at;
+}
+
+inline double QuarticPolynomial::GetJerk(double t)
+{
+  double jt = 6 * a_[3] + 24 * a_[4] * t;
+  return jt;
+}

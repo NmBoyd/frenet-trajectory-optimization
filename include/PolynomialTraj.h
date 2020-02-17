@@ -39,8 +39,6 @@ public:
 
 private:
   double a_[6] = {0,0,0,0,0,0};
-  double min_time_;
-  double max_time_;
 };
 
 /**
@@ -64,3 +62,31 @@ private:
 bool QuinticPolynomialPlanFrenet(Trajectory2d& traj, double sx, double sy, double syaw,
   double sv, double sa, double gx, double gy, double gyaw, double gv, double ga, double max_accel,
   double max_jerk, double dt, double min_time = 5.0, double max_time = 100.0);
+
+
+
+
+class QuarticPolynomial {
+public:
+  /**
+   * @param min_time the minimum time to the goal
+   * @param max_time the max time to the goal
+   */
+  QuarticPolynomial(double x_init, 
+    double v_init, 
+    double a_init,
+    double x_end, 
+    double v_end, 
+    double a_end, 
+    double time_end);
+  ~QuarticPolynomial();
+
+
+  inline double GetPosition(double time);
+  inline double GetVelocity(double time);
+  inline double GetAcceleration(double time);
+  inline double GetJerk(double time);
+
+private:
+  double a_[5] = {0,0,0,0,0};
+};
