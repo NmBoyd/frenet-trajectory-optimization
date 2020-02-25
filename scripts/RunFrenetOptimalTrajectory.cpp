@@ -11,6 +11,7 @@
 
 #include "FrenetOptimization.h"
 #include "PolynomialTraj.h"
+#include "CubicSpline.h"
 #include "json.hpp"
 #include "matplotlib-cpp/matplotlibcpp.h"
  
@@ -35,9 +36,19 @@ int main()
     ob_x.push_back(35.0); ob_y.push_back(8.0);
     ob_x.push_back(50.0); ob_y.push_back(3.0);
 
+    Spline2D c_spline(wp_x, wp_y);
+    PathSE2 path;
+    const double seg_len = 0.1; // segment length
+    for (double i=0;i < c_spline.s.back(); i+=seg_len)
+    {
+        std::array<double, 2> point_ = c_spline.calc_postion(i);
+        path.x.push_back(point_[0]);
+        path.y.push_back(point_[1]);
+        path.yaw.push_back(c_spline.calc_yaw(i));
+        path.k.push_back(c_spline.calc_curvature(i));
+    }
+
     int n = 100;
-    // TODO: Generate cubic spline of route
-    // TODO: Check the polynomial interpolation for quartic and quintic
     // TODO: Write the frenet optimal planner
     // TODO: Tune where needed and add lane-based FSM
 
@@ -59,6 +70,7 @@ int main()
         plt::clf();
         plt::scatter(wp_x, wp_y, 100.0);
         plt::plot(ob_x, ob_y, "xk");
+        plt::plot(path.x, path.y);
         plt::xlim(0, 100);
         plt::title("World map");
         plt::legend();

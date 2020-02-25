@@ -7,3 +7,6 @@ target_link_libraries(RunFrenetOptimalTrajectory LibFrenetTrajectoryOptimization
 
 add_executable(TestPolynomial TestPolynomial.cpp)
 target_link_libraries(TestPolynomial LibFrenetTrajectoryOptimization)
+
+add_executable(TestCubicSpline TestCubicSpline.cpp)
+target_link_libraries(TestCubicSpline LibFrenetTrajectoryOptimization)
