@@ -9,7 +9,7 @@
 #include <Eigen/QR>
 #include <Eigen/Dense>
 
-#include "FrenetOptimization.h"
+#include "FrenetOptimalPlanner.h"
 #include "PolynomialTraj.h"
 #include "CubicSpline.h"
 #include "json.hpp"
@@ -36,25 +36,49 @@ int main()
     ob_x.push_back(35.0); ob_y.push_back(8.0);
     ob_x.push_back(50.0); ob_y.push_back(3.0);
 
-    Spline2D c_spline(wp_x, wp_y);
+    std::vector<Vector2d> obstacle_poses;
+    for (int i=0;i<ob_x.size();i++)
+    {
+        obstacle_poses.push_back(Vector2d(ob_x[i], ob_y[i]));
+    }
+
+    Spline2D route_c_spline(wp_x, wp_y);
     PathSE2 path;
     const double seg_len = 0.1; // segment length
-    for (double i=0;i < c_spline.s.back(); i+=seg_len)
+    for (double i=0;i < route_c_spline.s.back(); i+=seg_len)
     {
-        std::array<double, 2> point_ = c_spline.calc_postion(i);
+        std::array<double, 2> point_ = route_c_spline.calc_postion(i);
         path.x.push_back(point_[0]);
         path.y.push_back(point_[1]);
-        path.yaw.push_back(c_spline.calc_yaw(i));
-        path.k.push_back(c_spline.calc_curvature(i));
+        path.yaw.push_back(route_c_spline.calc_yaw(i));
+        path.k.push_back(route_c_spline.calc_curvature(i));
     }
 
     int n = 100;
     // TODO: Write the frenet optimal planner
     // TODO: Tune where needed and add lane-based FSM
+    FrenetOptimalPlanner::Params params;
+    std::shared_ptr<FrenetOptimalPlanner> planner = std::make_shared<FrenetOptimalPlanner>();
+
+    FrenetState curr_state;
+    curr_state.speed = 10.0/3.6;    // current speed [m/s]
+    curr_state.d = 2.0;             // current lateral position [m]
+    curr_state.d_d = 0.0;           // current lateral speed [m/s]
+    curr_state.d_dd = 0.0;          // current lateral accel [m/s2]
+    curr_state.s = 0.0;             // current course position
 
 	for(int i=0; i<n; i++) {
 
+        // Calculate the optimal motion plan
+        FrenetTrajectory traj;
+        traj = planner->calcOptimalMotionPlan(route_c_spline, curr_state, obstacle_poses);
+        
         // Update vehicle state (current, previous, and end state)
+        curr_state.s = traj.s[1];
+        curr_state.speed = traj.s_d[1];
+        curr_state.d = traj.d[1];
+        curr_state.d_d = traj.d_d[1];
+        curr_state.d_dd = traj.d_dd[1];
 
         // Update nearby vehicle state
 
