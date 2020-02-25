@@ -1,20 +1,20 @@
 #pragma once
-
 #include <fstream>
 #include <math.h>
 #include <chrono>
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <numeric>
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#include "Utilities.h"
-#include "PolynomialTraj.h"
-#include "SafetyChecking.h"
 #include "CubicSpline.h"
- 
+#include "PolynomialTraj.h"
+#include "Utilities.h"
+// #include "SafetyChecking.h"
+
 using namespace Eigen;
 
 
@@ -72,6 +72,8 @@ class FrenetOptimalPlanner {
 public:
     struct Params
     {
+        double target_speed = 8;        // m/s
+
         double max_speed = 14;          // m/s
         double max_accel = 2.0;         // m/ss
         double max_curvature = 1.0;     // 1/m

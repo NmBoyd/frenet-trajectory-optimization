@@ -9,7 +9,6 @@
 #include <Eigen/QR>
 #include <Eigen/Dense>
 
-#include "FrenetOptimalPlanner.h"
 #include "PolynomialTraj.h"
 #include "json.hpp"
 #include "matplotlib-cpp/matplotlibcpp.h"

@@ -37,28 +37,28 @@ QuinticPolynomial::~QuinticPolynomial(){
   std::cout << "Destructing polynomial" << std::endl;
 }
 
-inline double QuinticPolynomial::GetPosition(double t)
+double QuinticPolynomial::GetPosition(double t)
 {
   double xt = a_[0] + a_[1] * t + a_[2] * pow(t,2) + 
         a_[3] * pow(t,3) + a_[4] * pow(t,4) + a_[5] * pow(t,5);
   return xt;
 }
 
-inline double QuinticPolynomial::GetVelocity(double t)
+double QuinticPolynomial::GetVelocity(double t)
 {
   double vt = a_[1] + 2 * a_[2] * t + 3 * a_[3] * pow(t,2) +
                 4 * a_[4] * pow(t,3) + 5 * a_[5] * pow(t,4);
   return vt;
 }
 
-inline double QuinticPolynomial::GetAcceleration(double t)
+double QuinticPolynomial::GetAcceleration(double t)
 {
   double at = 2 * a_[2] + 6 * a_[3] * t + 12 * a_[4] * pow(t,2)
                + 20 * a_[5] * pow(t,3);
   return at;
 }
 
-inline double QuinticPolynomial::GetJerk(double t)
+double QuinticPolynomial::GetJerk(double t)
 {
   double jt = 6 * a_[3] + 24 * a_[4] * t + 60 * a_[5] * pow(t,2);
   return jt;
@@ -146,7 +146,6 @@ bool QuinticPolynomialPlanFrenet(Trajectory2d& traj, double sx, double sy, doubl
 QuarticPolynomial::QuarticPolynomial(double x_init, 
   double v_init, 
   double a_init,
-  double x_end, 
   double v_end, 
   double a_end, 
   double time_end)
@@ -174,27 +173,27 @@ QuarticPolynomial::~QuarticPolynomial()
 {
 }
 
-inline double QuarticPolynomial::GetPosition(double t)
+double QuarticPolynomial::GetPosition(double t)
 {
   double xt = a_[0] + a_[1] * t + a_[2] * pow(t,2) + 
         a_[3] * pow(t,3) + a_[4] * pow(t,4);
   return xt;
 }
 
-inline double QuarticPolynomial::GetVelocity(double t)
+double QuarticPolynomial::GetVelocity(double t)
 {
   double vt = a_[1] + 2 * a_[2] * t + 3 * a_[3] * pow(t,2) +
                 4 * a_[4] * pow(t,3);
   return vt;
 }
 
-inline double QuarticPolynomial::GetAcceleration(double t)
+double QuarticPolynomial::GetAcceleration(double t)
 {
   double at = 2 * a_[2] + 6 * a_[3] * t + 12 * a_[4] * pow(t,2);
   return at;
 }
 
-inline double QuarticPolynomial::GetJerk(double t)
+double QuarticPolynomial::GetJerk(double t)
 {
   double jt = 6 * a_[3] + 24 * a_[4] * t;
   return jt;

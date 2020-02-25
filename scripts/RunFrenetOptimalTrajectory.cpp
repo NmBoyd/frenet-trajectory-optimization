@@ -10,8 +10,6 @@
 #include <Eigen/Dense>
 
 #include "FrenetOptimalPlanner.h"
-#include "PolynomialTraj.h"
-#include "CubicSpline.h"
 #include "json.hpp"
 #include "matplotlib-cpp/matplotlibcpp.h"
  
