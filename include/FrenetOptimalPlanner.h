@@ -65,7 +65,6 @@ struct FrenetTrajectory
     PathSE2 global_path;
 
     std::vector<double> delta_s; // change in longitudinal pose (distance)
-    
 };
 
 class FrenetOptimalPlanner {
@@ -87,7 +86,7 @@ public:
 
         double dt = 0.2;                // time tick [s]
         
-        double hull_radius;             // radius [m]
+        double hull_radius = 2;             // radius [m]
 
         // cost weights
         double kj = 0.1;                // jerk weight (lat and lon)
@@ -107,11 +106,13 @@ public:
 
     std::vector<FrenetTrajectory> calcFrenetTrajectory(FrenetState curr_state);
 
-    std::vector<FrenetTrajectory> calcFrenetTrajectoryGlobal(std::vector<FrenetTrajectory> f_traj, 
+    std::vector<FrenetTrajectory> calcFrenetTrajectoriesGlobal(std::vector<FrenetTrajectory> f_traj, 
                                             Spline2D c_spline);
 
-    std::vector<FrenetTrajectory> checkTrajectoryCollisions(std::vector<FrenetTrajectory> f_traj, 
+    std::vector<FrenetTrajectory> checkTrajectories(std::vector<FrenetTrajectory> f_traj, 
                                 std::vector<Vector2d> obstacles);
+
+    bool collision(FrenetTrajectory traj, std::vector<Vector2d> obstacles);
 
 private:
     Params params_;

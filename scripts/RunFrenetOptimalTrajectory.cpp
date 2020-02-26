@@ -45,14 +45,17 @@ int main()
     const double seg_len = 0.1; // segment length
     for (double i=0;i < route_c_spline.s.back(); i+=seg_len)
     {
-        std::array<double, 2> point_ = route_c_spline.calc_postion(i);
+        std::array<std::shared_ptr<double>, 2> point_ptr = route_c_spline.calc_postion(i);
+        std::array<double, 2> point_;
+        point_[0] = *point_ptr[0];
+        point_[1] = *point_ptr[1];
         path.x.push_back(point_[0]);
         path.y.push_back(point_[1]);
-        path.yaw.push_back(route_c_spline.calc_yaw(i));
-        path.k.push_back(route_c_spline.calc_curvature(i));
+        path.yaw.push_back(*route_c_spline.calc_yaw(i));
+        path.k.push_back(*route_c_spline.calc_curvature(i));
     }
 
-    int n = 100;
+    int n = 500;
     // TODO: Write the frenet optimal planner
     // TODO: Tune where needed and add lane-based FSM
     FrenetOptimalPlanner::Params params;
@@ -70,6 +73,8 @@ int main()
         // Calculate the optimal motion plan
         FrenetTrajectory traj;
         traj = planner->calcOptimalMotionPlan(route_c_spline, curr_state, obstacle_poses);
+        std::cout << "Current pose: " << traj.global_path.x[1] << ", " << traj.global_path.y[1] << std::endl;
+         std::cout << "Goal pose: " << path.x.back() << ", " << path.y.back() << std::endl;
         
         // Update vehicle state (current, previous, and end state)
         curr_state.s = traj.s[1];
@@ -78,6 +83,15 @@ int main()
         curr_state.d_d = traj.d_d[1];
         curr_state.d_dd = traj.d_dd[1];
 
+        if (hypot(traj.global_path.x[1]-path.x.back(), traj.global_path.y[1]-path.y.back()) <= 1.0) {
+            std::cout << "Goal Reached" << std::endl;
+            break;
+        }
+
+        std::vector<double> x;
+        x.push_back(traj.global_path.x[1]);
+        std::vector<double> y;
+        y.push_back(traj.global_path.y[1]);
         // Update nearby vehicle state
 
         // Update the route spline interpolation.
@@ -91,8 +105,10 @@ int main()
         // Update the plot shown
         plt::clf();
         plt::scatter(wp_x, wp_y, 100.0);
-        plt::plot(ob_x, ob_y, "xk");
+        plt::plot(ob_x, ob_y,"xk");
         plt::plot(path.x, path.y);
+        plt::scatter(traj.global_path.x, traj.global_path.y, 50.0);
+        plt::scatter(x, y, 100.0);
         plt::xlim(0, 100);
         plt::title("World map");
         plt::legend();

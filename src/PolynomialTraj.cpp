@@ -34,7 +34,7 @@ QuinticPolynomial::QuinticPolynomial(double x_init,
 }
 
 QuinticPolynomial::~QuinticPolynomial(){
-  std::cout << "Destructing polynomial" << std::endl;
+  // std::cout << "Destructing polynomial" << std::endl;
 }
 
 double QuinticPolynomial::GetPosition(double t)

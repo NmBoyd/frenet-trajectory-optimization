@@ -43,34 +43,43 @@ Spline::Spline(std::vector<double> x_, std::vector<double> y_)
     }
 }
 
-double Spline::calc(double t)
+std::shared_ptr<double> Spline::calc(double t)
 {
     if(t<x.front() || t>x.back()){
-      throw std::invalid_argument( "received value out of the pre-defined range" );
+        return nullptr;
+    //   throw std::invalid_argument( "Spline: received value out of the pre-defined range" );
     }
     int seg_id = bisect(t, 0, nx);
     double dx = t - x[seg_id];
-    return a[seg_id] + b[seg_id] * dx + c[seg_id] * dx * dx + d[seg_id] * dx * dx * dx;
+    double val = a[seg_id] + b[seg_id] * dx + c[seg_id] * dx * dx + d[seg_id] * dx * dx * dx; 
+    std::shared_ptr<double> p = std::make_shared<double>(val);
+    return p;
 }
 
-double Spline::calc_d(double t)
+std::shared_ptr<double> Spline::calc_d(double t)
 {
     if(t<x.front() || t>x.back()){
-      throw std::invalid_argument( "received value out of the pre-defined range" );
+        return nullptr;
+    //   throw std::invalid_argument( "Spline: received value out of the pre-defined range" );
     }
     int seg_id = bisect(t, 0, nx-1);
     double dx = t - x[seg_id];
-    return b[seg_id]  + 2 * c[seg_id] * dx + 3 * d[seg_id] * dx * dx;
+    double val = b[seg_id]  + 2 * c[seg_id] * dx + 3 * d[seg_id] * dx * dx;
+    std::shared_ptr<double> p_d = std::make_shared<double>(val);
+    return p_d;
 }
 
-double Spline::calc_dd(double t)
+std::shared_ptr<double> Spline::calc_dd(double t)
 {
     if(t<x.front() || t>x.back()){
-      throw std::invalid_argument( "received value out of the pre-defined range" );
+        return nullptr;
+    //   throw std::invalid_argument( "Spline: received value out of the pre-defined range" );
     }
     int seg_id = bisect(t, 0, nx);
     double dx = t - x[seg_id];
-    return 2 * c[seg_id] + 6 * d[seg_id] * dx;
+    double val = 2 * c[seg_id] + 6 * d[seg_id] * dx;
+    std::shared_ptr<double> p_dd = std::make_shared<double>(val);
+    return p_dd;
 }
 
 Eigen::MatrixXd Spline::calc_A()
@@ -122,27 +131,45 @@ Spline2D::Spline2D(std::vector<double> x, std::vector<double> y)
     sy = Spline(s, y);
 }
 
-std::array<double, 2> Spline2D::calc_postion(double s_t)
+std::array<std::shared_ptr<double>, 2> Spline2D::calc_postion(double s_t)
 {
-    double x = sx.calc(s_t);
-    double y = sy.calc(s_t);
-    return {{x, y}};
+    std::shared_ptr<double> x_ptr, y_ptr;
+    x_ptr = sx.calc(s_t);
+    y_ptr = sy.calc(s_t);
+    if (x_ptr == nullptr || y_ptr == nullptr) {
+        return {{nullptr, nullptr}};
+    } 
+    
+    return {{x_ptr, y_ptr}};
 };
 
-double Spline2D::calc_curvature(double s_t)
+std::shared_ptr<double> Spline2D::calc_curvature(double s_t)
 {
-    double dx = sx.calc_d(s_t);
-    double ddx = sx.calc_dd(s_t);
-    double dy = sy.calc_d(s_t);
-    double ddy = sy.calc_dd(s_t);
-    return (ddy * dx - ddx * dy)/(dx * dx + dy * dy);
+    std::shared_ptr<double> dx_ptr, ddx_ptr, dy_ptr, ddy_ptr;
+    dx_ptr = sx.calc_d(s_t);
+    ddx_ptr = sx.calc_dd(s_t);
+    dy_ptr = sy.calc_d(s_t);
+    ddy_ptr = sy.calc_dd(s_t);
+
+    if (dx_ptr == nullptr || ddx_ptr == nullptr || dy_ptr == nullptr || ddy_ptr == nullptr) {
+        return nullptr;
+    } 
+    double dx = *dx_ptr; 
+    double ddx = *ddx_ptr;
+    double dy = *dy_ptr;
+    double ddy = *ddy_ptr;
+    double val = (ddy * dx - ddx * dy)/(dx * dx + dy * dy);
+    std::shared_ptr<double> k = std::make_shared<double>(val);
+    return k;
 }
 
-double Spline2D::calc_yaw(double s_t)
+std::shared_ptr<double> Spline2D::calc_yaw(double s_t)
 {
-    double dx = sx.calc_d(s_t);
-    double dy = sy.calc_d(s_t);
-    return std::atan2(dy, dx);
+    double dx = *sx.calc_d(s_t);
+    double dy = *sy.calc_d(s_t);
+    double val = std::atan2(dy, dx);
+    std::shared_ptr<double> yaw = std::make_shared<double>(val);
+    return yaw;
 }
 
 std::vector<double> Spline2D::calc_s(std::vector<double> x, std::vector<double> y)

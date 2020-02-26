@@ -16,10 +16,15 @@ FrenetOptimalPlanner::~FrenetOptimalPlanner()
 
 FrenetTrajectory FrenetOptimalPlanner::calcOptimalMotionPlan(
     Spline2D c_spline, FrenetState f_state, std::vector<Vector2d> obstacles)
-{
+{ 
+    std::cout << "calculating frenet traj" << std::endl;
     std::vector<FrenetTrajectory> f_traj_list = calcFrenetTrajectory(f_state);
-    f_traj_list = calcFrenetTrajectoryGlobal(f_traj_list, c_spline);
-    f_traj_list = checkTrajectoryCollisions(f_traj_list, obstacles);
+    std::cout << "calculating global coordinates" << std::endl;
+    f_traj_list = calcFrenetTrajectoriesGlobal(f_traj_list, c_spline);
+    std::cout << "checking the trajectories and removing bad values" << std::endl;
+    f_traj_list = checkTrajectories(f_traj_list, obstacles);
+
+    std::cout << "Trajectory list size " << f_traj_list.size() << std::endl;
 
     double min_cost = numeric_limits<double>::max();
     FrenetTrajectory best_traj;
@@ -100,17 +105,101 @@ std::vector<FrenetTrajectory> FrenetOptimalPlanner::calcFrenetTrajectory(
             }
         }
     }
+    std::cout << "Generated " << traj_list.size() << " trajectories" << std::endl;
     return traj_list;
 }
 
-std::vector<FrenetTrajectory> FrenetOptimalPlanner::calcFrenetTrajectoryGlobal(
-    std::vector<FrenetTrajectory> f_traj, Spline2D c_spline)
+std::vector<FrenetTrajectory> FrenetOptimalPlanner::calcFrenetTrajectoriesGlobal(
+    std::vector<FrenetTrajectory> f_traj_list, Spline2D c_spline)
 {
+    for (auto& f_traj : f_traj_list)
+    {
+        for (int i=0; i < f_traj.s.size(); i++)
+        {
+            // std::cout << "calculating global xy pos at "<< f_traj.s[i] << std::endl;
+            std::array<std::shared_ptr<double>, 2> pos_ptr = c_spline.calc_postion(f_traj.s[i]); 
+            if (pos_ptr[0] == nullptr || pos_ptr[1] == nullptr) {
+                std::cout << "nullptr break on " << i <<std::endl;
+                break;
+            } 
+            std::array<double,2> pos;
+            pos[0] = *pos_ptr[0];
+            pos[1] = *pos_ptr[1];
+            double yaw = *c_spline.calc_yaw(f_traj.s[i]);
+            double d = f_traj.d[i];
+            double x_global = pos[0] + d * cos(yaw + M_PI_2);
+            double y_global = pos[1] + d * sin(yaw + M_PI_2);
+            f_traj.global_path.x.push_back(x_global);
+            f_traj.global_path.y.push_back(y_global);
+        }
 
+        for (int i=0; i < f_traj.global_path.x.size()-1; i++)
+        {
+            double dx = f_traj.global_path.x[i+1] - f_traj.global_path.x[i];
+            double dy = f_traj.global_path.y[i+1] - f_traj.global_path.y[i];
+            f_traj.global_path.yaw.push_back(atan2(dy,dx));
+            f_traj.delta_s.push_back(hypot(dx,dy));
+        }
+        f_traj.global_path.yaw.push_back(f_traj.global_path.yaw.back());
+        f_traj.delta_s.push_back(f_traj.delta_s.back());
+
+        for (int i=0;i<f_traj.global_path.yaw.size()-1; i++)
+        {
+            f_traj.global_path.k.push_back((f_traj.global_path.yaw[i+1]-f_traj.global_path.yaw[i])/f_traj.delta_s[i]);
+        }
+    }
+    std::cout << f_traj_list.size() << " global trajectories" << std::endl;
+    return f_traj_list;
 }
 
-std::vector<FrenetTrajectory> FrenetOptimalPlanner::checkTrajectoryCollisions(
-    std::vector<FrenetTrajectory> f_traj, std::vector<Vector2d> obstacles)
+std::vector<FrenetTrajectory> FrenetOptimalPlanner::checkTrajectories(
+    std::vector<FrenetTrajectory> f_traj_list, std::vector<Vector2d> obstacles)
 {
+    std::vector<FrenetTrajectory> ok_traj_list;
+    for (auto& traj : f_traj_list)
+    {
+        bool flagged = false;
 
+        for (int i=0; i < traj.s_d.size(); i++) {
+            if (traj.s_d[i] > params_.max_speed) {
+                std::cout << "Speed Violation: removing trjectory: " << traj.s_d[i] << ">" << params_.max_speed << std::endl;
+                flagged = true;
+            }
+            else if (traj.s_dd[i] > params_.max_accel) {
+                std::cout << "Accel Violation: removing trjectory: " << traj.s_dd[i] << ">" << params_.max_accel << std::endl;
+                flagged = true;
+            }
+            else if (traj.global_path.k[i] > params_.max_curvature) {
+                std::cout << "Curvature Violation: removing trjectory: " << traj.global_path.k[i] << ">" << params_.max_curvature << std::endl;
+                flagged = true;
+            }
+            else if (collision(traj, obstacles)) {
+                std::cout << "Collision Violation: removing trjectory: " << 
+                    traj.global_path.x[1] << ", " << traj.global_path.y[1] << std::endl;
+                flagged = true;
+            }
+        }
+        if (!flagged) {
+            ok_traj_list.push_back(traj);
+        }
+    }
+    return ok_traj_list;
+}
+
+bool FrenetOptimalPlanner::collision(FrenetTrajectory traj, std::vector<Vector2d> obstacles)
+{
+    for (auto& obstacle : obstacles) 
+    {
+        for (int i=0; i < traj.global_path.x.size(); i++)
+        {
+            double dist = pow((traj.global_path.x[i]-obstacle[0]),2) +
+                                pow((traj.global_path.y[i]-obstacle[1]),2);
+            bool collision = dist <= pow(params_.hull_radius, 2) ? true : false;
+            if (collision) {
+                std::cout << "Collision: Distance value " << dist << std::endl;
+                return true;
+            }
+        }
+    }
+    return false;
 }
