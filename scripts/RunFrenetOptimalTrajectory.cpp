@@ -12,8 +12,11 @@
 #include "FrenetOptimalPlanner.h"
 #include "json.hpp"
 #include "matplotlib-cpp/matplotlibcpp.h"
+
+#include <chrono>
  
 using namespace Eigen;
+using namespace std::chrono;
 namespace plt = matplotlibcpp;
 
 int main()
@@ -25,14 +28,29 @@ int main()
     wp_x.push_back(20.5); wp_y.push_back(5.0);
     wp_x.push_back(35.0); wp_y.push_back(6.5);
     wp_x.push_back(70.5); wp_y.push_back(0.0);
+    wp_x.push_back(80.0); wp_y.push_back(5.0);
+    wp_x.push_back(50.5); wp_y.push_back(7.0);
+    wp_x.push_back(20.5); wp_y.push_back(0.0);
+
+    wp_x.push_back(-10.5); wp_y.push_back(0.0);
+    wp_x.push_back(-20.5); wp_y.push_back(5.0);
+    wp_x.push_back(-20.0); wp_y.push_back(7.0);
+    wp_x.push_back(0.5); wp_y.push_back(5.0);
+    wp_x.push_back(0.0); wp_y.push_back(10.0);
 
     // obstacles
+    // If the obstacle is too close to the goal, it will seg fault with nullptr from c_spline
     std::vector<double> ob_x, ob_y;
     ob_x.push_back(20.0); ob_y.push_back(10.0);
     ob_x.push_back(30.0); ob_y.push_back(6.0);
     ob_x.push_back(30.0); ob_y.push_back(8.0);
     ob_x.push_back(35.0); ob_y.push_back(8.0);
     ob_x.push_back(50.0); ob_y.push_back(3.0);
+    ob_x.push_back(60.0); ob_y.push_back(5.0);
+    ob_x.push_back(65.0); ob_y.push_back(-1.0);
+    ob_x.push_back(15.0); ob_y.push_back(5.0);
+    ob_x.push_back(10.0); ob_y.push_back(10.0);
+    ob_x.push_back(20.0); ob_y.push_back(5.0);
 
     std::vector<Vector2d> obstacle_poses;
     for (int i=0;i<ob_x.size();i++)
@@ -72,9 +90,15 @@ int main()
 
         // Calculate the optimal motion plan
         FrenetTrajectory traj;
+
+        high_resolution_clock::time_point t1 = high_resolution_clock::now();
+        
         traj = planner->calcOptimalMotionPlan(route_c_spline, curr_state, obstacle_poses);
-        std::cout << "Current pose: " << traj.global_path.x[1] << ", " << traj.global_path.y[1] << std::endl;
-         std::cout << "Goal pose: " << path.x.back() << ", " << path.y.back() << std::endl;
+        
+        high_resolution_clock::time_point t2 = high_resolution_clock::now();
+        duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+        std::cout << "Calc Optimal Path Time: " << time_span.count() << " seconds.";
+        std::cout << std::endl;
         
         // Update vehicle state (current, previous, and end state)
         curr_state.s = traj.s[1];
@@ -82,6 +106,8 @@ int main()
         curr_state.d = traj.d[1];
         curr_state.d_d = traj.d_d[1];
         curr_state.d_dd = traj.d_dd[1];
+
+        std::cout << "Current speed: " << curr_state.speed << " Goal Speed: " << planner->getParameters().target_speed<< std::endl;
 
         if (hypot(traj.global_path.x[1]-path.x.back(), traj.global_path.y[1]-path.y.back()) <= 1.0) {
             std::cout << "Goal Reached" << std::endl;
@@ -105,11 +131,11 @@ int main()
         // Update the plot shown
         plt::clf();
         plt::scatter(wp_x, wp_y, 100.0);
-        plt::plot(ob_x, ob_y,"xk");
+        plt::scatter(ob_x, ob_y,200.0);
         plt::plot(path.x, path.y);
         plt::scatter(traj.global_path.x, traj.global_path.y, 50.0);
         plt::scatter(x, y, 100.0);
-        plt::xlim(0, 100);
+        plt::xlim(-100, 100);
         plt::title("World map");
         plt::legend();
         plt::grid(true);

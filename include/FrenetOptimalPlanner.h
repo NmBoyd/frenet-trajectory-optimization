@@ -75,7 +75,7 @@ public:
 
         double max_speed = 14;          // m/s
         double max_accel = 2.0;         // m/ss
-        double max_curvature = 1.0;     // 1/m
+        double max_curvature = 10.0;//1.0;     // 1/m
         double max_road_width = 7.0;    // m
         double max_predicition_t = 5.0; // s
         double min_prediction_t = 4.0;  // s
@@ -114,6 +114,7 @@ public:
 
     bool collision(FrenetTrajectory traj, std::vector<Vector2d> obstacles);
 
+    Params getParameters() { return params_;}
 private:
     Params params_;
 };

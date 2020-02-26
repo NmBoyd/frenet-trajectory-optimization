@@ -17,14 +17,10 @@ FrenetOptimalPlanner::~FrenetOptimalPlanner()
 FrenetTrajectory FrenetOptimalPlanner::calcOptimalMotionPlan(
     Spline2D c_spline, FrenetState f_state, std::vector<Vector2d> obstacles)
 { 
-    std::cout << "calculating frenet traj" << std::endl;
+    
     std::vector<FrenetTrajectory> f_traj_list = calcFrenetTrajectory(f_state);
-    std::cout << "calculating global coordinates" << std::endl;
     f_traj_list = calcFrenetTrajectoriesGlobal(f_traj_list, c_spline);
-    std::cout << "checking the trajectories and removing bad values" << std::endl;
     f_traj_list = checkTrajectories(f_traj_list, obstacles);
-
-    std::cout << "Trajectory list size " << f_traj_list.size() << std::endl;
 
     double min_cost = numeric_limits<double>::max();
     FrenetTrajectory best_traj;
@@ -105,7 +101,7 @@ std::vector<FrenetTrajectory> FrenetOptimalPlanner::calcFrenetTrajectory(
             }
         }
     }
-    std::cout << "Generated " << traj_list.size() << " trajectories" << std::endl;
+    // std::cout << "Generated " << traj_list.size() << " trajectories" << std::endl;
     return traj_list;
 }
 
@@ -119,7 +115,7 @@ std::vector<FrenetTrajectory> FrenetOptimalPlanner::calcFrenetTrajectoriesGlobal
             // std::cout << "calculating global xy pos at "<< f_traj.s[i] << std::endl;
             std::array<std::shared_ptr<double>, 2> pos_ptr = c_spline.calc_postion(f_traj.s[i]); 
             if (pos_ptr[0] == nullptr || pos_ptr[1] == nullptr) {
-                std::cout << "nullptr break on " << i <<std::endl;
+                // std::cout << "nullptr break on " << i <<std::endl;
                 break;
             } 
             std::array<double,2> pos;
@@ -148,7 +144,6 @@ std::vector<FrenetTrajectory> FrenetOptimalPlanner::calcFrenetTrajectoriesGlobal
             f_traj.global_path.k.push_back((f_traj.global_path.yaw[i+1]-f_traj.global_path.yaw[i])/f_traj.delta_s[i]);
         }
     }
-    std::cout << f_traj_list.size() << " global trajectories" << std::endl;
     return f_traj_list;
 }
 
@@ -162,20 +157,19 @@ std::vector<FrenetTrajectory> FrenetOptimalPlanner::checkTrajectories(
 
         for (int i=0; i < traj.s_d.size(); i++) {
             if (traj.s_d[i] > params_.max_speed) {
-                std::cout << "Speed Violation: removing trjectory: " << traj.s_d[i] << ">" << params_.max_speed << std::endl;
+                // std::cout << "Speed Violation: removing trjectory: " << traj.s_d[i] << ">" << params_.max_speed << std::endl;
                 flagged = true;
             }
-            else if (traj.s_dd[i] > params_.max_accel) {
-                std::cout << "Accel Violation: removing trjectory: " << traj.s_dd[i] << ">" << params_.max_accel << std::endl;
+            else if (abs(traj.s_dd[i]) > params_.max_accel) {
+                // std::cout << "Accel Violation: removing trjectory: " << traj.s_dd[i] << ">" << params_.max_accel << std::endl;
                 flagged = true;
             }
-            else if (traj.global_path.k[i] > params_.max_curvature) {
-                std::cout << "Curvature Violation: removing trjectory: " << traj.global_path.k[i] << ">" << params_.max_curvature << std::endl;
+            else if (abs(traj.global_path.k[i]) > params_.max_curvature) {
+                // std::cout << "Curvature Violation: removing trjectory: " << traj.global_path.k[i] << ">" << params_.max_curvature << std::endl;
                 flagged = true;
             }
             else if (collision(traj, obstacles)) {
-                std::cout << "Collision Violation: removing trjectory: " << 
-                    traj.global_path.x[1] << ", " << traj.global_path.y[1] << std::endl;
+                // std::cout << "Collision Violation: removing trjectory: " << traj.global_path.x[1] << ", " << traj.global_path.y[1] << std::endl;
                 flagged = true;
             }
         }
@@ -196,7 +190,7 @@ bool FrenetOptimalPlanner::collision(FrenetTrajectory traj, std::vector<Vector2d
                                 pow((traj.global_path.y[i]-obstacle[1]),2);
             bool collision = dist <= pow(params_.hull_radius, 2) ? true : false;
             if (collision) {
-                std::cout << "Collision: Distance value " << dist << std::endl;
+                // std::cout << "Collision: Distance value " << dist << std::endl;
                 return true;
             }
         }
